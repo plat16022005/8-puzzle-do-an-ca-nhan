@@ -161,6 +161,39 @@ def Find_X(x, goal):
             if x == goal[i][j]:
                 return i, j
     return None
+def IDA_limit(Start, Goal, limit):
+    qp = PriorityQueue()
+    qp.put( (0,0,Start,[]) )
+    
+    visited = set()
+    
+    while not qp.empty():
+        f_n,chiphi,current, path = qp.get()
+        if current == Goal:
+            path = path + [Goal]
+            return path
+        
+        x,y = Find_Empty(current)
+        
+        for dx,dy in Moves:
+            new_X = x + dx
+            new_Y = y + dy
+            
+            if(Check(new_X,new_Y)):
+                new_matran = Chinh_Sua_Ma_Tran(current, x, y, new_X, new_Y)
+                if str(new_matran) not in visited:
+                    visited.add(str(new_matran))
+                    f_new = chiphi + Manhattan_Heuristic(new_matran, Goal)
+                    if f_new <= limit:
+                        qp.put((f_new,chiphi+1,new_matran,path+[current]))
+    return None
+
+def IDA(Start,goal,limit):
+    check = None
+    while check == None:
+        limit = limit + limit/2
+        check = IDA_limit(Start, goal ,limit)
+    return check
 class Problem:
     def __init__(self, initial, goal):
         self.initial = initial

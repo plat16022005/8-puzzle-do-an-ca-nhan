@@ -42,7 +42,8 @@ algorithm = {'Breadth-first search': False,
              'Depth-First Search': False,
              'Greedy Search': False, 
              'Iterative Deepening DFS': False,
-             'A* Search': False}
+             'A* Search': False,
+             'IDA* Search': False}
 blocks = []
 block_width = 100
 block_height = 100
@@ -168,6 +169,9 @@ while running:
                 elif btn_A_Star.collidepoint(event.pos) and solving == False:
                     text_box_algorithm = 'A* Search'
                     selected = True
+                elif btn_IDA_Star.collidepoint(event.pos) and solving == False:
+                    text_box_algorithm = 'IDA* Search'
+                    selected = True
                 elif btn_solve.collidepoint(event.pos) and solving == False:
                     if selected == True:
                         algorithm[f'{text_box_algorithm}'] = True
@@ -187,6 +191,8 @@ while running:
                             path = AI.Greedy_Search(begin, result)
                         elif text_box_algorithm == 'A* Search':
                             path = AI.A_Star_Search(begin, result)
+                        elif text_box_algorithm == 'IDA* Search':
+                            path = AI.IDA(begin, result, 50)
                 elif btn_next.collidepoint(event.pos) and solving == True:
                     if index < len(path):
                         index += 1
@@ -207,7 +213,8 @@ while running:
                                  'Depth-First Search': False,
                                  'Iterative Deepening DFS': False,
                                  'Greedy Search': False,
-                                 'A* Search': False}
+                                 'A* Search': False,
+                                 'IDA* Search': False}
                     selected = False
                     speed = 500
             else:  # inputting == True
@@ -257,6 +264,7 @@ while running:
         btn_IDDFS = button(1000, 250, 125, 50, 'IDDFS', 'green', 'white')
         btn_Greedy = button(550, 350, 125, 50, 'Greedy', 'green', 'white')
         btn_A_Star = button(700, 350, 125, 50, 'A*', 'green', 'white')
+        btn_IDA_Star = button(850, 350, 125, 50, 'IDA*', 'green', 'white')
         # btn_AND_OR = button(850, 250, 125, 50, 'AND-OR', 'green', 'white')
         
         box_status = draw_box_with_text(400, 20, 400, 50, 'STATUS', 'black', 'white')
