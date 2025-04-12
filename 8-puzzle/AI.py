@@ -1,6 +1,7 @@
 from collections import deque
 import copy
 from queue import PriorityQueue
+import random
 
 Moves = [(-1, 0), (1, 0), (0, -1), (0, 1)]  # Up, Down, Left, Right
 
@@ -194,6 +195,56 @@ def IDA(Start,goal,limit):
         limit = limit + limit/2
         check = IDA_limit(Start, goal ,limit)
     return check
+def Simple_Hill_Climbing(start, goal):
+    current = start
+    path = [current]
+
+    while True:
+        neighbors = []
+        X, Y = Find_Empty(current)
+        for dx, dy in Moves:
+            new_x, new_y = X + dx, Y + dy
+            if Check(new_x, new_y):
+                new_state = Chinh_Sua_Ma_Tran(current, X, Y, new_x, new_y)
+                neighbors.append(new_state)
+
+        if not neighbors:
+            break
+
+        next_state = min(neighbors, key=lambda s: Manhattan_Heuristic(s, goal))
+
+        if Manhattan_Heuristic(next_state, goal) >= Manhattan_Heuristic(current, goal):
+            break
+
+        current = next_state
+        path.append(current)
+
+    return path
+def Stochastic_Hill_Climbing(start, goal):
+    current = start
+    path = [current]
+
+    while True:
+        neighbors = []
+        X, Y = Find_Empty(current)
+        for dx, dy in Moves:
+            new_x, new_y = X + dx, Y + dy
+            if Check(new_x, new_y):
+                new_state = Chinh_Sua_Ma_Tran(current, X, Y, new_x, new_y)
+                neighbors.append(new_state)
+
+        if not neighbors:
+            break
+
+        next_state = random.choice(neighbors)
+
+        if Manhattan_Heuristic(next_state, goal) >= Manhattan_Heuristic(current, goal):
+            break
+
+        current = next_state
+        path.append(current)
+
+    return path
 class Problem:
     def __init__(self, initial, goal):
         self.initial = initial
