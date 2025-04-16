@@ -2,6 +2,7 @@ from collections import deque
 import copy
 from queue import PriorityQueue
 import random
+import math
 
 Moves = [(-1, 0), (1, 0), (0, -1), (0, 1)]  # Up, Down, Left, Right
 
@@ -245,6 +246,153 @@ def Stochastic_Hill_Climbing(start, goal):
         path.append(current)
 
     return path
+def Steepest_Ascent_Hill_Climbing(start, goal):
+    current = start
+    path = [current]
+
+    while True:
+        neighbors = []
+        X, Y = Find_Empty(current)
+        for dx, dy in Moves:
+            new_x, new_y = X + dx, Y + dy
+            if Check(new_x, new_y):
+                new_state = Chinh_Sua_Ma_Tran(current, X, Y, new_x, new_y)
+                neighbors.append(new_state)
+
+        if not neighbors:
+            break
+
+        next_state = max(neighbors, key=lambda s: -Manhattan_Heuristic(s, goal))
+
+        if Manhattan_Heuristic(next_state, goal) >= Manhattan_Heuristic(current, goal):
+            break
+
+        current = next_state
+        path.append(current)
+
+    return path
+def Simulated_Annealing(start, goal, temperature=1000, cooling_rate=0.99):
+    current = start
+    path = [current]
+
+    while temperature > 1:
+        if current == goal:
+            break
+
+        neighbors = []
+        X, Y = Find_Empty(current)
+        for dx, dy in Moves:
+            new_x, new_y = X + dx, Y + dy
+            if Check(new_x, new_y):
+                new_state = Chinh_Sua_Ma_Tran(current, X, Y, new_x, new_y)
+                neighbors.append(new_state)
+
+        if not neighbors:
+            break
+
+        next_state = random.choice(neighbors)
+        current_cost = Manhattan_Heuristic(current, goal)
+        next_cost = Manhattan_Heuristic(next_state, goal)
+
+        if next_cost < current_cost:
+            current = next_state
+            path.append(current)
+        else:
+            delta = current_cost - next_cost
+            acceptance_probability = math.exp(delta / temperature)
+            if random.random() < acceptance_probability:
+                current = next_state
+                path.append(current)
+
+        temperature *= cooling_rate
+
+    return path
+def Beam_Search(Start, Goal, beam_width=3):
+    current_level = [(Start, [])]
+    visited = set()
+
+    while current_level:
+        next_level_candidates = PriorityQueue()
+
+        for state, path in current_level:
+            if state == Goal:
+                return path + [Goal]
+
+            x, y = Find_Empty(state)
+
+            for dx, dy in Moves:
+                nx, ny = x + dx, y + dy
+                if Check(nx, ny):
+                    new_state = Chinh_Sua_Ma_Tran(state, x, y, nx, ny)
+                    if str(new_state) not in visited:
+                        visited.add(str(new_state))
+                        next_level_candidates.put((Manhattan_Heuristic(new_state, Goal), new_state, path + [state]))
+
+        current_level = []
+        for _ in range(min(beam_width, next_level_candidates.qsize())):
+            _, new_state, new_path = next_level_candidates.get()
+            current_level.append((new_state, new_path))
+
+    return []
+import random
+import copy
+
+def Genetic_Algorithm(start, goal, population_size=10, generations=1000):
+    def fitness(individual):
+        return Manhattan_Heuristic(individual, goal)
+
+    def crossover(parent1, parent2):
+        flat1 = sum(parent1, [])
+        flat2 = sum(parent2, [])
+
+        index = random.randint(1, 7)
+        child_flat = flat1[:index]
+
+        for num in flat2:
+            if num not in child_flat:
+                child_flat.append(num)
+
+        child = [child_flat[i*3:(i+1)*3] for i in range(3)]
+        return child
+
+    def mutate(individual):
+        x, y = Find_Empty(individual)
+        dx, dy = random.choice(Moves)
+        new_x, new_y = x + dx, y + dy
+        if Check(new_x, new_y):
+            return Chinh_Sua_Ma_Tran(individual, x, y, new_x, new_y)
+        return individual
+
+    def shuffle_state(state, moves=30):
+        shuffled = copy.deepcopy(state)
+        for _ in range(moves):
+            x, y = Find_Empty(shuffled)
+            dx, dy = random.choice(Moves)
+            new_x, new_y = x + dx, y + dy
+            if Check(new_x, new_y):
+                shuffled = Chinh_Sua_Ma_Tran(shuffled, x, y, new_x, new_y)
+        return shuffled
+
+    population = [shuffle_state(start) for _ in range(population_size)]
+
+    for _ in range(generations):
+        population = sorted(population, key=fitness)
+        if fitness(population[0]) == 0:
+            return population[0]
+
+        next_generation = population[:population_size // 2]
+
+        while len(next_generation) < population_size:
+            parent1 = random.choice(next_generation[:population_size // 4])
+            parent2 = random.choice(next_generation[:population_size // 4])
+            child = crossover(parent1, parent2)
+            child = mutate(child)
+            next_generation.append(child)
+
+        population = next_generation
+
+    return None
+
 class Problem:
     def __init__(self, initial, goal):
         self.initial = initial

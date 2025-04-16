@@ -45,7 +45,11 @@ algorithm = {'Breadth-first search': False,
              'A* Search': False,
              'IDA* Search': False,
              'Simple Hill Climbing': False,
-             'Stochastic Hill Climbing': False}
+             'Stochastic Hill Climbing': False,
+             'Steepest Ascent Hill Climbing': False,
+             'Simulated Annealing': False,
+             'Beam Search': False,
+             'Genetic Algorithm': False}
 blocks = []
 block_width = 100
 block_height = 100
@@ -180,6 +184,18 @@ while running:
                 elif btn_StochasticHC.collidepoint(event.pos) and solving == False:
                     text_box_algorithm = 'Stochastic Hill Climbing'
                     selected = True
+                elif btn_Steepest.collidepoint(event.pos) and solving == False:
+                    text_box_algorithm = 'Steepest Ascent Hill Climbing'
+                    selected = True
+                elif btn_Simulated.collidepoint(event.pos) and solving == False:
+                    text_box_algorithm = 'Simulated Annealing'
+                    selected = True
+                elif btn_Beam.collidepoint(event.pos) and solving == False:
+                    text_box_algorithm = 'Beam Search'
+                    selected = True
+                elif btn_GA.collidepoint(event.pos) and solving == False:
+                    text_box_algorithm = 'Genetic Algorithm'
+                    selected = True
                 elif btn_solve.collidepoint(event.pos) and solving == False:
                     if selected == True:
                         algorithm[f'{text_box_algorithm}'] = True
@@ -205,6 +221,14 @@ while running:
                             path = AI.Simple_Hill_Climbing(begin, result)
                         elif text_box_algorithm == 'Stochastic Hill Climbing':
                             path = AI.Stochastic_Hill_Climbing(begin, result)
+                        elif text_box_algorithm == 'Steepest Ascent Hill Climbing':
+                            path = AI.Steepest_Ascent_Hill_Climbing(begin, result)
+                        elif text_box_algorithm == 'Simulated Annealing':
+                            path = AI.Simulated_Annealing(begin, result)
+                        elif text_box_algorithm == 'Beam Search':
+                            path = AI.Beam_Search(begin, result, 50)
+                        elif text_box_algorithm == 'Genetic Algorithm':
+                            path = AI.Genetic_Algorithm(begin, result, 50)
                 elif btn_next.collidepoint(event.pos) and solving == True:
                     if index < len(path):
                         index += 1
@@ -228,7 +252,11 @@ while running:
                                  'A* Search': False,
                                  'IDA* Search': False,
                                  'Simple Hill Climbing': False,
-                                 'Stochastic Hill Climbing': False}
+                                 'Stochastic Hill Climbing': False,
+                                 'Steepest Ascent Hill Climbing': False,
+                                 'Simulated Annealing': False,
+                                 'Beam Search': False,
+                                 'Genetic Algorithm': False}
                     selected = False
                     speed = 500
             else:  # inputting == True
@@ -281,6 +309,10 @@ while running:
         btn_IDA_Star = button(850, 350, 125, 50, 'IDA*', 'green', 'white')
         btn_SimpleHC = button(1000, 350, 125, 50, 'Sim HC', 'green', 'white')
         btn_StochasticHC = button(550, 450, 125, 50, 'Stoc HC', 'green', 'white')
+        btn_Steepest = button(700, 450, 125, 50, 'Steep HC', 'green', 'white')
+        btn_Simulated = button(850, 450, 125, 50, 'Simulated', 'green', 'white')
+        btn_Beam = button(1000, 450, 125, 50, 'Beam', 'green', 'white')
+        btn_GA = button(550, 550, 125, 50, 'GA', 'green', 'white')
         # btn_AND_OR = button(850, 250, 125, 50, 'AND-OR', 'green', 'white')
         
         box_status = draw_box_with_text(400, 20, 400, 50, 'STATUS', 'black', 'white')
