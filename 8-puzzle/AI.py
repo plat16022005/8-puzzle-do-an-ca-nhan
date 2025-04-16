@@ -334,8 +334,6 @@ def Beam_Search(Start, Goal, beam_width=3):
             current_level.append((new_state, new_path))
 
     return []
-import random
-import copy
 
 def Genetic_Algorithm(start, goal, population_size=10, generations=1000):
     def fitness(individual):
@@ -392,56 +390,133 @@ def Genetic_Algorithm(start, goal, population_size=10, generations=1000):
         population = next_generation
 
     return None
+def And_Or_Search(current_state, goal_state, path = [], visited = set(), depth = 0, max_depth = 30):    
+    if depth > max_depth:
+        return (False, [])
+    # Kiểm tra trạng thái hiện tại
+    if current_state == goal_state:
+        return (True, path)
+    
+    # Đánh dấu trạng thái đã thăm
+    state_tuple = tuple(map(tuple, current_state))
+    if state_tuple in visited:
+        return (False, [])
+    visited.add(state_tuple)
+    
+    # Tìm vị trí ô trống
+    x, y = next((i, j) for i in range(3) for j in range(3) if current_state[i][j] == 0)
+    
+    # Thử các hướng đi có thể (OR nodes)
+    for dx, dy, move in [(-1, 0, 'Up'), (1, 0, 'Down'), (0, -1, 'Left'), (0, 1, 'Right')]:
+        nx, ny = x + dx, y + dy
+        if 0 <= nx < 3 and 0 <= ny < 3:
+            # Tạo trạng thái mới
+            new_state = [row[:] for row in current_state]
+            new_state[x][y], new_state[nx][ny] = new_state[nx][ny], new_state[x][y]
+            
+            # Đệ quy tìm kiếm (AND - phải tìm được đường đi từ trạng thái này)
+            solved, new_path = And_Or_Search(new_state, goal_state, path + [move], visited.copy())
+            
+            if solved:
+                return (True, new_path)
+    
+    return (False, [])
+def Belief_State_Search(initial_belief, goal_state):
+    """
+    Thuật toán tìm kiếm trong môi trường niềm tin (belief state) cho bài toán 8-puzzle
+    Giả định: Chỉ quan sát được vị trí của ô trống và 1 số khác (ví dụ số 1)
+    """
+    
+    visited = set()  # Lưu các belief state đã thăm
+    queue = deque()
+    queue.append((initial_belief, []))  # (belief state, path)
+    
+    while queue:
+        current_belief, path = queue.popleft()
+        
+        # Kiểm tra nếu tất cả các trạng thái trong belief đều là goal
+        if all(state == goal_state for state in current_belief.possible_states):
+            return path
+        
+        # Tạo key để kiểm tra belief state đã thăm
+        belief_key = frozenset(tuple(tuple(row) for row in state) for state in current_belief.possible_states)
+        if belief_key in visited:
+            continue
+        visited.add(belief_key)
+        
+        # Thử các action có thể
+        for action in ['UP', 'DOWN', 'LEFT', 'RIGHT']:
+            # Tạo belief state mới sau action
+            new_belief = current_belief.update(action, get_observation_after_action(action))
+            
+            if new_belief.possible_states:  # Nếu action hợp lệ
+                queue.append((new_belief, path + [action]))
+    
+    return None  # Không tìm thấy giải pháp
 
-class Problem:
-    def __init__(self, initial, goal):
-        self.initial = initial
-        self.goal = goal
+class BeliefState8Puzzle:
+    def __init__(self, possible_states):
+        self.possible_states = possible_states  # Danh sách các trạng thái có thể
+        
+    def update(self, action, observation):
+        """Cập nhật belief state sau khi thực hiện action và nhận observation"""
+        new_states = []
+        for state in self.possible_states:
+            new_state = self.apply_action(state, action)
+            if new_state and self.observation_match(new_state, observation):
+                new_states.append(new_state)
+        return BeliefState8Puzzle(new_states)
+    
+    def apply_action(self, state, action):
+        """Áp dụng action lên một trạng thái cụ thể"""
+        x, y = self.find_blank(state)
+        new_state = [row[:] for row in state]
+        
+        if action == 'UP' and x > 0:
+            new_state[x][y], new_state[x-1][y] = new_state[x-1][y], new_state[x][y]
+            return new_state
+        elif action == 'DOWN' and x < 2:
+            new_state[x][y], new_state[x+1][y] = new_state[x+1][y], new_state[x][y]
+            return new_state
+        elif action == 'LEFT' and y > 0:
+            new_state[x][y], new_state[x][y-1] = new_state[x][y-1], new_state[x][y]
+            return new_state
+        elif action == 'RIGHT' and y < 2:
+            new_state[x][y], new_state[x][y+1] = new_state[x][y+1], new_state[x][y]
+            return new_state
+        return None
+    
+    def observation_match(self, state, observation):
+        """Kiểm tra trạng thái có phù hợp với observation không"""
+        # Giả sử observation là vị trí của số 1 và ô trống
+        (obs_1_x, obs_1_y), (obs_blank_x, obs_blank_y) = observation
+        state_1_pos = self.find_number(state, 1)
+        state_blank_pos = self.find_blank(state)
+        return state_1_pos == (obs_1_x, obs_1_y) and state_blank_pos == (obs_blank_x, obs_blank_y)
+    
+    def find_blank(self, state):
+        """Tìm vị trí ô trống (0)"""
+        for i in range(3):
+            for j in range(3):
+                if state[i][j] == 0:
+                    return (i, j)
+        return (-1, -1)
+    
+    def find_number(self, state, num):
+        """Tìm vị trí của một số cụ thể"""
+        for i in range(3):
+            for j in range(3):
+                if state[i][j] == num:
+                    return (i, j)
+        return (-1, -1)
+def get_observation_after_action(action):
+    """Hàm giả lập sensor - trả về observation sau khi thực hiện action"""
+    # Trong thực tế, đây sẽ là thông tin từ sensor
+    # Ở đây giả sử observation là vị trí của số 1 và ô trống
+    # (Cần được triển khai cụ thể tùy bài toán)
+    pass
 
-    def goal_test(self, state):
-        return state == self.goal
-
-    def actions(self, state):
-        x, y = Find_Empty(state)
-        acts = []
-        for dx, dy in Moves:
-            new_x, new_y = x + dx, y + dy
-            if Check(new_x, new_y):
-                acts.append((dx, dy))
-        return acts
-
-    def results(self, state, action):
-        # Giả lập môi trường không xác định: có thể thành công hoặc thất bại
-        x, y = Find_Empty(state)
-        dx, dy = action
-        new_x, new_y = x + dx, y + dy
-        if not Check(new_x, new_y):
-            return [state]  # thất bại
-
-        success = Chinh_Sua_Ma_Tran(state, x, y, new_x, new_y)
-        return [success, state]  # có thể thành công hoặc không
-def AND_OR_Graph_Search(problem):
-    return OR_Search(problem.initial, problem, [])
-
-def OR_Search(state, problem, path):
-    if problem.goal_test(state):
-        return []
-
-    if tuple(tuple(row) for row in state) in path:
-        return None  # tránh lặp
-
-    for action in problem.actions(state):
-        results = problem.results(state, action)
-        plan = AND_Search(results, problem, path + [tuple(tuple(row) for row in state)])
-        if plan is not None:
-            return [(action, plan)]
-    return None
-
-def AND_Search(states, problem, path):
-    plans = []
-    for s in states:
-        plan = OR_Search(s, problem, path)
-        if plan is None:
-            return None
-        plans.append(plan)
-    return plans
+def generate_all_possible_states(observation):
+    """Tạo tất cả các trạng thái có thể phù hợp với observation ban đầu"""
+    # Triển khai hàm này dựa trên observation đầu vào
+    pass
