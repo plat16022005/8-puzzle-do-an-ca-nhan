@@ -1,7 +1,8 @@
 import pygame
 import random
 import AI
-
+import sys
+import os
 pygame.init()
 pygame.font.init()
 
@@ -51,7 +52,9 @@ algorithm = {'Breadth-first search': False,
              'Beam Search': False,
              'Genetic Algorithm': False,
              'AND-OR graph search': False,
-             'Belief State Search': False}
+             'Belief State Search': False,
+             'Backtracking Search Algorithm': False,
+             'Belief State Search 1 part': False}
 blocks = []
 block_width = 100
 block_height = 100
@@ -116,6 +119,18 @@ def random_puzzle():
         puzzle = [puzzle[i:i + 3] for i in range(0, 9, 3)]
         if is_solvable(puzzle):
             return puzzle
+def random_puzzle_Belief():
+    puzzle = [i for i in range(9)]
+    random.shuffle(puzzle)
+    puzzle = [puzzle[i:i + 3] for i in range(0, 9, 3)]
+    return puzzle
+def random_puzzle_Belief(one_part):
+    remaining_numbers = [i for i in range(9) if i not in one_part[0]]
+    random.shuffle(remaining_numbers)
+    one_part[1] = remaining_numbers[:3]
+    one_part[2] = remaining_numbers[3:]
+    return one_part
+
 def add_number_to_input(puzzle_input, number):
     for i in range(3):
         for j in range(3):
@@ -204,6 +219,12 @@ while running:
                 elif btn_Belief.collidepoint(event.pos) and solving == False:
                     text_box_algorithm = 'Belief State Search'
                     selected = True
+                elif btn_Back.collidepoint(event.pos) and solving == False:
+                    text_box_algorithm = 'Backtracking Search Algorithm'
+                    selected = True
+                elif btn_Belief1p.collidepoint(event.pos) and solving == False:
+                    text_box_algorithm = 'Belief State Search 1 part'
+                    selected = True
                 elif btn_solve.collidepoint(event.pos) and solving == False:
                     if selected == True:
                         algorithm[f'{text_box_algorithm}'] = True
@@ -237,7 +258,33 @@ while running:
                         elif text_box_algorithm == 'AND-OR graph search':
                             path = AI.And_Or_Search(begin, result)
                         elif text_box_algorithm == 'Belief State Search':
-                            path = AI.Belief_State_Search(begin, result)
+                            for i in range(100):
+                                begin = random_puzzle_Belief()
+                                print(begin)
+                                path = AI.BFS(begin, result)
+                                if path != None:
+                                    print('Founded solution!')
+                                    for i in path:
+                                        print(i, end='->')
+                                    print('')
+                                else:
+                                    print('No solution!')
+                            sys.exit()
+                        elif text_box_algorithm == 'Backtracking Search Algorithm':
+                            path = AI.Backtracking_Search(begin, result)
+                        elif text_box_algorithm == 'Belief State Search 1 part':
+                            for i in range(100):
+                                one_part = random_puzzle_Belief([[1,2,3],[],[]])
+                                print(one_part)
+                                path = AI.BFS(one_part, result)
+                                if path != None:
+                                    print('Founded solution!')
+                                    for i in path:
+                                        print(i, end='->')
+                                    print('')
+                                else:
+                                    print('No solution!')
+                            sys.exit()
                 elif btn_next.collidepoint(event.pos) and solving == True:
                     if index < len(path):
                         index += 1
@@ -267,7 +314,9 @@ while running:
                                  'Beam Search': False,
                                  'Genetic Algorithm': False,
                                  'AND-OR graph search': False,
-                                 'Belief State Search': False}
+                                 'Belief State Search': False,
+                                 'Backtracking Search Algorithm': False,
+                                 'Belief State Search 1 part': False}
                     selected = False
                     speed = 500
             else:  # inputting == True
@@ -309,7 +358,8 @@ while running:
         btn_next = button(350, 700, 125, 50, '->', 'blue', 'white')
         btn_prev = button(20, 700, 125, 50, '<-', 'blue', 'white')
         btn_tru = button(25, 50, 50, 50, '-', 'black', 'white')
-        btn_cong = button(225, 50, 50, 50, '+', 'black', 'white') 
+        btn_cong = button(225, 50, 50, 50, '+', 'black', 'white')
+        btn_random_Belief = button(25, 400, 125, 50, 'RanBelief', 'red', 'white') 
         
         btn_BFS = button(550, 250, 125, 50, 'BFS', 'green', 'white')
         btn_UCS = button(700, 250, 125, 50, 'UCS', 'green', 'white')
@@ -326,6 +376,8 @@ while running:
         btn_GA = button(550, 550, 125, 50, 'GA', 'green', 'white')
         btn_AndOR = button(700, 550, 125, 50, 'AND-OR', 'green', 'white')
         btn_Belief = button(850, 550, 125, 50, 'Belief', 'green', 'white')
+        btn_Back = button(1000, 550, 125, 50, 'Back', 'green', 'white')
+        btn_Belief1p = button(1000, 650, 125, 50, 'Belief1p', 'green', 'white')
         # btn_AND_OR = button(850, 250, 125, 50, 'AND-OR', 'green', 'white')
         
         box_status = draw_box_with_text(400, 20, 400, 50, 'STATUS', 'black', 'white')

@@ -520,3 +520,20 @@ def generate_all_possible_states(observation):
     """Tạo tất cả các trạng thái có thể phù hợp với observation ban đầu"""
     # Triển khai hàm này dựa trên observation đầu vào
     pass
+def Backtracking_Search(start, goal, path=[], visited=set(), max_depth=200):
+    if start == goal:
+        return path + [start]
+    if max_depth <= 0:
+        return None
+    x, y = Find_Empty(start)
+
+    for dx, dy in Moves:
+        new_x, new_y = x + dx, y + dy
+        if Check(new_x, new_y):
+            new_state = Chinh_Sua_Ma_Tran(start, x, y, new_x, new_y)
+            if str(new_state) not in visited:
+                visited.add(str(new_state)) 
+                result = Backtracking_Search(new_state, goal, path + [start], visited, max_depth - 1)
+                if result is not None:
+                    return result
+    return None
