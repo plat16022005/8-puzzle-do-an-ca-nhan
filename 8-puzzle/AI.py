@@ -157,6 +157,13 @@ def Manhattan_Heuristic(current, goal):
                 goal_x, goal_y = Find_X(current[i][j], goal)
                 distance += abs(i - goal_x) + abs(j - goal_y)
     return distance
+def Count_Different(current, goal):
+    count = 0
+    for i in range(3):
+        for j in range(3):
+            if current[i][j] != goal[i][j]:
+                count += 1
+    return count
 def Find_X(x, goal):
     for i in range(3):
         for j in range(3):
@@ -537,3 +544,56 @@ def Backtracking_Search(start, goal, path=[], visited=set(), max_depth=200):
                 if result is not None:
                     return result
     return None
+def get_stt(x,y):
+    stt = 0
+    for i in range(3):
+        for j in range(3):
+            if i == x and j == y:
+                return stt
+            else:
+                stt += 1
+def q_study(start, goal,epsilon=0.1, episodes=1):
+    path = [start]
+    q_table = {}
+    for i in range(3):
+        for j in range(3):
+            q_table[(i,j)] = [0, 0, 0, 0]
+    for episode in range(episodes):
+        current_state = start
+        while current_state != goal:
+            x, y = Find_Empty(current_state)
+            if random.random() < epsilon:
+                action = random.randint(0, 3)
+            else:
+                action = q_table[(x,y)].index(max(q_table[(x,y)]))
+            
+            new_x, new_y = x + Moves[action][0], y + Moves[action][1]
+            if Check(new_x, new_y):
+                new_state = Chinh_Sua_Ma_Tran(current_state, x, y, new_x, new_y)
+                path.append(new_state)
+                reward = -1 if new_state != goal else 100
+                q_table[(x,y)][action] += reward + max(q_table[(new_x,new_y)])
+                current_state = new_state
+                print(q_table)
+
+
+    return path
+def q_learning(state, goal, q_table = {(0, 0): [0, -21550, 0, -21691], (0, 1): [0, -230762886, -21817, -21819], (0, 2): [0, -21748, -21836, 0], (1, 0): [-21424, -21755, 0, -233041395], (1, 1): [-21549, -21549, -21548, -21548], (1, 2): [-21765, -21562, -231545770, 0], (2, 0): [-21680, 0, 0, -21952], (2, 1): [-233364951, 0, -21877, -21640], (2, 2): [-21583, 0, -21719, 0]}, max_steps=100):
+    path = [state]
+    while state != goal:
+        x, y = Find_Empty(state)
+        action = q_table[(x, y)].index(max(q_table[(x, y)]))
+        dx, dy = Moves[action]
+        print("Hành động:", action)
+        new_x, new_y = x + dx, y + dy
+        print("Vị trí mới:", (new_x, new_y))
+        
+        if Check(new_x, new_y):
+            new_state = Chinh_Sua_Ma_Tran(state, x, y, new_x, new_y)
+            path.append(new_state)
+            
+            state = new_state
+        else:
+            print("Bị kẹt hoặc Q-table sai tại vị trí", (x, y))
+            break
+    return path

@@ -54,7 +54,8 @@ algorithm = {'Breadth-first search': False,
              'AND-OR graph search': False,
              'Belief State Search': False,
              'Backtracking Search Algorithm': False,
-             'Belief State Search 1 part': False}
+             'Belief State Search 1 part': False,
+             'Q-Learning': False}
 blocks = []
 block_width = 100
 block_height = 100
@@ -225,6 +226,9 @@ while running:
                 elif btn_Belief1p.collidepoint(event.pos) and solving == False:
                     text_box_algorithm = 'Belief State Search 1 part'
                     selected = True
+                elif btn_Q_Learning.collidepoint(event.pos) and solving == False:
+                    text_box_algorithm = 'Q-Learning'
+                    selected = True
                 elif btn_solve.collidepoint(event.pos) and solving == False:
                     if selected == True:
                         algorithm[f'{text_box_algorithm}'] = True
@@ -261,7 +265,7 @@ while running:
                             for i in range(100):
                                 begin = random_puzzle_Belief()
                                 print(begin)
-                                path = AI.BFS(begin, result)
+                                path = AI.DFS(begin, result)
                                 if path != None:
                                     print('Founded solution!')
                                     for i in path:
@@ -276,7 +280,7 @@ while running:
                             for i in range(100):
                                 one_part = random_puzzle_Belief([[1,2,3],[],[]])
                                 print(one_part)
-                                path = AI.BFS(one_part, result)
+                                path = AI.DFS(one_part, result)
                                 if path != None:
                                     print('Founded solution!')
                                     for i in path:
@@ -285,6 +289,8 @@ while running:
                                 else:
                                     print('No solution!')
                             sys.exit()
+                        elif text_box_algorithm == 'Q-Learning':
+                            path = AI.q_study(begin, result)
                 elif btn_next.collidepoint(event.pos) and solving == True:
                     if index < len(path):
                         index += 1
@@ -316,7 +322,9 @@ while running:
                                  'AND-OR graph search': False,
                                  'Belief State Search': False,
                                  'Backtracking Search Algorithm': False,
-                                 'Belief State Search 1 part': False}
+                                 'Belief State Search 1 part': False,
+                                 'Q-Learning': False}
+                    
                     selected = False
                     speed = 500
             else:  # inputting == True
@@ -378,6 +386,7 @@ while running:
         btn_Belief = button(850, 550, 125, 50, 'Belief', 'green', 'white')
         btn_Back = button(1000, 550, 125, 50, 'Back', 'green', 'white')
         btn_Belief1p = button(1000, 650, 125, 50, 'Belief1p', 'green', 'white')
+        btn_Q_Learning = button(550, 650, 125, 50, 'Q-Learning', 'green', 'white')
         # btn_AND_OR = button(850, 250, 125, 50, 'AND-OR', 'green', 'white')
         
         box_status = draw_box_with_text(400, 20, 400, 50, 'STATUS', 'black', 'white')
