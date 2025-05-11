@@ -22,8 +22,8 @@ Mục tiêu chính của dự án là minh họa quá trình giải 8-puzzle, t�
 Dự án cài đặt và triển khai các thuật toán sau để giải bài toán 8-puzzle:
 
 * **Tìm kiếm không có thông tin (Uninformed Search):**
-    * Breadth-First Search (BFS)
-    * Uniform Cost Search (UCS)
+    * Breadth-First Search (BFS):
+    * Uniform Cost Search (UCS):
     * Depth-First Search (DFS)
     * Iterative Deepening Depth-First Search (IDDFS)
 * **Tìm kiếm có thông tin (Informed Search):**
