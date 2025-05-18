@@ -104,12 +104,14 @@ def depth_bounded_search(start, goal, depth_bound, visited):
                         return [start] + solution
     return None
                 
-def Iterative_Deepening_DFS(start, goal, max_depth):
-    for depth in range(max_depth + 1):
+def Iterative_Deepening_DFS(start, goal):
+    depth = 0
+    while True:
         visited = set()
         solution = depth_bounded_search(start, goal, depth, visited)
         if solution is not None:
             return solution
+        depth += 1
     return None
 def Greedy_Search(start, goal):
     visited = set()
@@ -134,8 +136,10 @@ def A_Star_Search(start, goal):
     visited = set()
     open = PriorityQueue()
     open.put((Manhattan_Heuristic(start, goal), start, [start]))
+    g = 0
     while open:
         cost, current, path = open.get()
+        g += 1
         if str(current) not in visited:
             visited.add(tuple(tuple(row) for row in current))
             if current == goal:
@@ -147,7 +151,7 @@ def A_Star_Search(start, goal):
                     new_state = Chinh_Sua_Ma_Tran(current, X, Y, new_x, new_y)
                     tuple_state = tuple(tuple(row) for row in new_state)
                     if tuple_state not in visited:
-                        open.put((cost+1+Manhattan_Heuristic(current,goal), new_state, path + [new_state]))
+                        open.put((g+1+Manhattan_Heuristic(current,goal), new_state, path + [new_state]))
     return None
 def Manhattan_Heuristic(current, goal):
     distance = 0
@@ -220,11 +224,15 @@ def Simple_Hill_Climbing(start, goal):
             break
 
         next_state = min(neighbors, key=lambda s: Manhattan_Heuristic(s, goal))
-
-        if Manhattan_Heuristic(next_state, goal) >= Manhattan_Heuristic(current, goal):
+        for i in neighbors:
+            next_state = i
+            if Manhattan_Heuristic(next_state, goal) <= Manhattan_Heuristic(current, goal):
+                current = next_state
+            else:
+                break
+        if Manhattan_Heuristic(next_state, goal) > Manhattan_Heuristic(current, goal):
             break
 
-        current = next_state
         path.append(current)
 
     return path
@@ -269,7 +277,7 @@ def Steepest_Ascent_Hill_Climbing(start, goal):
         if not neighbors:
             break
 
-        next_state = max(neighbors, key=lambda s: -Manhattan_Heuristic(s, goal))
+        next_state = min(neighbors, key=lambda s: Manhattan_Heuristic(s, goal))
 
         if Manhattan_Heuristic(next_state, goal) >= Manhattan_Heuristic(current, goal):
             break
@@ -342,92 +350,91 @@ def Beam_Search(Start, Goal, beam_width=3):
 
     return []
 
-def Genetic_Algorithm(start, goal, population_size=10, generations=1000):
-    def fitness(individual):
-        return Manhattan_Heuristic(individual, goal)
+def flatten(board):
+    return [tile for row in board for tile in row]
 
-    def crossover(parent1, parent2):
-        flat1 = sum(parent1, [])
-        flat2 = sum(parent2, [])
+def unflatten(lst):
+    return [lst[i:i+3] for i in range(0, 9, 3)]
 
-        index = random.randint(1, 7)
-        child_flat = flat1[:index]
+def fitness(board, goal):
+    return -Manhattan_Heuristic(board, goal)
 
-        for num in flat2:
-            if num not in child_flat:
-                child_flat.append(num)
+def generate_random_board():
+    tiles = list(range(9))
+    while True:
+        random.shuffle(tiles)
+        if is_solvable(tiles):
+            return unflatten(tiles)
 
-        child = [child_flat[i*3:(i+1)*3] for i in range(3)]
-        return child
+def is_solvable(tiles):
+    inv_count = 0
+    for i in range(8):
+        for j in range(i + 1, 9):
+            if tiles[i] and tiles[j] and tiles[i] > tiles[j]:
+                inv_count += 1
+    return inv_count % 2 == 0
 
-    def mutate(individual):
-        x, y = Find_Empty(individual)
-        dx, dy = random.choice(Moves)
-        new_x, new_y = x + dx, y + dy
-        if Check(new_x, new_y):
-            return Chinh_Sua_Ma_Tran(individual, x, y, new_x, new_y)
-        return individual
+def crossover(parent1, parent2):
+    p1 = flatten(parent1)
+    p2 = flatten(parent2)
+    cut = random.randint(1, 7)
+    child = p1[:cut]
+    for gene in p2:
+        if gene not in child:
+            child.append(gene)
+    return unflatten(child)
 
-    def shuffle_state(state, moves=30):
-        shuffled = copy.deepcopy(state)
-        for _ in range(moves):
-            x, y = Find_Empty(shuffled)
-            dx, dy = random.choice(Moves)
-            new_x, new_y = x + dx, y + dy
-            if Check(new_x, new_y):
-                shuffled = Chinh_Sua_Ma_Tran(shuffled, x, y, new_x, new_y)
-        return shuffled
+def mutate(board, mutation_rate=0.1):
+    if random.random() < mutation_rate:
+        flat = flatten(board)
+        i, j = random.sample(range(9), 2)
+        flat[i], flat[j] = flat[j], flat[i]
+        if is_solvable(flat):
+            return unflatten(flat)
+    return board
 
-    population = [shuffle_state(start) for _ in range(population_size)]
-
-    for _ in range(generations):
-        population = sorted(population, key=fitness)
-        if fitness(population[0]) == 0:
-            return population[0]
-
-        next_generation = population[:population_size // 2]
-
-        while len(next_generation) < population_size:
-            parent1 = random.choice(next_generation[:population_size // 4])
-            parent2 = random.choice(next_generation[:population_size // 4])
-            child = crossover(parent1, parent2)
-            child = mutate(child)
-            next_generation.append(child)
-
-        population = next_generation
-
-    return None
-def And_Or_Search(current_state, goal_state, path = [], visited = set(), depth = 0, max_depth = 30):    
-    if depth > max_depth:
-        return (False, [])
-    # Kiểm tra trạng thái hiện tại
-    if current_state == goal_state:
-        return (True, path)
-    
-    # Đánh dấu trạng thái đã thăm
-    state_tuple = tuple(map(tuple, current_state))
-    if state_tuple in visited:
-        return (False, [])
-    visited.add(state_tuple)
-    
-    # Tìm vị trí ô trống
-    x, y = next((i, j) for i in range(3) for j in range(3) if current_state[i][j] == 0)
-    
-    # Thử các hướng đi có thể (OR nodes)
-    for dx, dy, move in [(-1, 0, 'Up'), (1, 0, 'Down'), (0, -1, 'Left'), (0, 1, 'Right')]:
-        nx, ny = x + dx, y + dy
-        if 0 <= nx < 3 and 0 <= ny < 3:
-            # Tạo trạng thái mới
-            new_state = [row[:] for row in current_state]
-            new_state[x][y], new_state[nx][ny] = new_state[nx][ny], new_state[x][y]
-            
-            # Đệ quy tìm kiếm (AND - phải tìm được đường đi từ trạng thái này)
-            solved, new_path = And_Or_Search(new_state, goal_state, path + [move], visited.copy())
-            
-            if solved:
-                return (True, new_path)
-    
-    return (False, [])
+def Genetic_Algorithm(start, goal, population_size=100, generations=500, mutation_rate=0.1):
+    path = []
+    print("Các giống đang có:", end='\n')
+    population = [generate_random_board() for _ in range(population_size)]
+    for i in population:
+        print(i, end='\n')
+    best = None
+    for gen in range(generations):
+        population.sort(key=lambda b: fitness(b, goal), reverse=True)
+        if fitness(population[0], goal) == 0:
+            print(f"Thế hệ giống {gen}:", end='\n')
+            path.append(population[0])
+            print(population[0])
+            return path
+        next_gen = population[:5]  # elitism
+        while len(next_gen) < population_size:
+            p1, p2 = random.choices(population[:5], k=2)
+            child = crossover(p1, p2)
+            child = mutate(child, mutation_rate)
+            next_gen.append(child)
+        population = next_gen
+        best = population[0]
+        path.append(best)
+        print(f"Thế hệ giống {gen}:", end='\n')
+        print(best)
+def And_Or_Search(current_state, goal_state, visited = set(), depth = 0, max_depth = 30):    
+    def Or_Search(current, goal):
+        result = []
+        X,Y = Find_Empty(current)
+        for dx, dy in Moves:
+            x,y = X+dx,Y+dy
+            if Check(x,y):
+                result_state = Chinh_Sua_Ma_Tran(current,X,Y,x,y)
+                result.append(And_Search(result_state,goal_state))
+        return result
+    def And_Search(current, goal):
+        return BFS(current,goal)
+    def And_Or(start, goal):
+        for i in Or_Search(start, goal):
+            print(i)
+            print()
+    And_Or(current_state,goal_state)
 def Belief_State_Search(initial_belief, goal_state):
     """
     Thuật toán tìm kiếm trong môi trường niềm tin (belief state) cho bài toán 8-puzzle
@@ -527,7 +534,7 @@ def generate_all_possible_states(observation):
     """Tạo tất cả các trạng thái có thể phù hợp với observation ban đầu"""
     # Triển khai hàm này dựa trên observation đầu vào
     pass
-def Backtracking_Search(start, goal, path=[], visited=set(), max_depth=200):
+def Backtracking_Search(start, goal, path=[], visited=set(), max_depth=100):
     if start == goal:
         return path + [start]
     if max_depth <= 0:
@@ -578,22 +585,98 @@ def q_study(start, goal,epsilon=0.1, episodes=1):
 
 
     return path
-def q_learning(state, goal, q_table = {(0, 0): [0, -21550, 0, -21691], (0, 1): [0, -230762886, -21817, -21819], (0, 2): [0, -21748, -21836, 0], (1, 0): [-21424, -21755, 0, -233041395], (1, 1): [-21549, -21549, -21548, -21548], (1, 2): [-21765, -21562, -231545770, 0], (2, 0): [-21680, 0, 0, -21952], (2, 1): [-233364951, 0, -21877, -21640], (2, 2): [-21583, 0, -21719, 0]}, max_steps=100):
-    path = [state]
-    while state != goal:
-        x, y = Find_Empty(state)
-        action = q_table[(x, y)].index(max(q_table[(x, y)]))
-        dx, dy = Moves[action]
-        print("Hành động:", action)
-        new_x, new_y = x + dx, y + dy
-        print("Vị trí mới:", (new_x, new_y))
-        
-        if Check(new_x, new_y):
-            new_state = Chinh_Sua_Ma_Tran(state, x, y, new_x, new_y)
-            path.append(new_state)
-            
-            state = new_state
+def Rangbuoc(state):
+    #Ràng buộc chuyển động:
+    x,y = Find_Empty(state)
+    move = {(0,0): [(1, 0), (0, 1)],
+            (0,1): [(1, 0), (0, -1), (0, 1)],
+            (0,2): [(1, 0), (0, -1)],
+            (1,0): [(-1, 0), (1, 0), (0, 1)],
+            (1,1): [(-1, 0), (1, 0), (0, -1), (0, 1)],
+            (1,2): [(-1, 0), (1, 0), (0, -1)],
+            (2,0): [(-1, 0), (0, 1)],
+            (2,1): [(-1, 0), (0, -1), (0, 1)],
+            (2,2): [(-1, 0), (0, -1)]
+            }
+    return move[(x,y)]
+
+def Backtracking(state, goal, path = [], visited = set(), depth = 900):
+    if state == goal or depth == 0:
+        return path
+
+    visited.add(tuple(map(tuple, state)))
+    move = Rangbuoc(state)
+    X,Y = Find_Empty(state)
+    for dx, dy in move:
+        new_x, new_y = X + dx, Y + dy
+        new_state = Chinh_Sua_Ma_Tran(state, X, Y, new_x, new_y)
+
+        if tuple(map(tuple, new_state)) not in visited:
+            result = Backtracking(new_state, goal, path + [new_state], visited, depth - 1)
+            if result:
+                return result
+
+    visited.remove(tuple(map(tuple, state)))
+    return None
+def Forward_Check(new_state, visited):
+    # Tránh lặp trạng thái
+    if tuple(map(tuple, new_state)) in visited:
+        return False
+    # Trạng thái mới không nên bị "kẹt", nên kiểm tra nếu có ít nhất 1 hướng di chuyển
+    empty_x, empty_y = Find_Empty(new_state)
+    if len(Rangbuoc(new_state)) == 1:
+        return False
+    return True
+
+def Forward_Checking(state, goal, path=[], visited=set(), depth=900):
+    if state == goal or depth == 0:
+        return path
+
+    visited.add(tuple(map(tuple, state)))
+    move = Rangbuoc(state)
+    X, Y = Find_Empty(state)
+    
+    for dx, dy in move:
+        new_x, new_y = X + dx, Y + dy
+        new_state = Chinh_Sua_Ma_Tran(state, X, Y, new_x, new_y)
+
+        if Forward_Check(new_state, visited):
+            result = Forward_Checking(new_state, goal, path + [new_state], visited, depth - 1)
+            if result:
+                return result
+
+    visited.remove(tuple(map(tuple, state)))
+def DoiMotKhacNhau(board):
+    seen = set()
+    for row in board:
+        for val in row:
+            if val in seen:
+                return False
+            seen.add(val)
+    return True
+def GiaiDuoc(puzzle):
+    flat_puzzle = [num for row in puzzle for num in row if num != 0]
+    inversions = 0
+    for i in range(len(flat_puzzle)):
+        for j in range(i + 1, len(flat_puzzle)):
+            if flat_puzzle[i] > flat_puzzle[j]:
+                inversions += 1
+    return inversions % 2 == 0
+def AC3():
+    boards = []
+    for i in range(10000):
+        nums = list(range(9))
+        random.shuffle(nums)
+        board_random = [nums[0:3], nums[3:6], nums[6:9]]
+        boards.append(board_random)
+    print(boards[-1])
+    # Lộc bảng khác nhau từng đôi một và giải được
+    for board in boards:
+        if DoiMotKhacNhau(board) and GiaiDuoc(board):
+            continue
         else:
-            print("Bị kẹt hoặc Q-table sai tại vị trí", (x, y))
-            break
-    return path
+            boards.remove(board)
+    if boards == None:
+        return AC3()
+    else:
+        return random.choice(boards)

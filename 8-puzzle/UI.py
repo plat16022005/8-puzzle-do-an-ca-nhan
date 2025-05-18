@@ -55,7 +55,8 @@ algorithm = {'Breadth-first search': False,
              'Belief State Search': False,
              'Backtracking Search Algorithm': False,
              'Belief State Search 1 part': False,
-             'Q-Learning': False}
+             'Q-Learning': False,
+             'Forward Checking': False}
 blocks = []
 block_width = 100
 block_height = 100
@@ -171,7 +172,10 @@ while running:
                     if speed > 0:
                         speed -= 100
                 elif btn_tru.collidepoint(event.pos):
-                        speed += 100
+                    speed += 100
+                elif btn_result.collidepoint(event.pos):
+                    if solving == True:
+                        index = len(path)-1
                 elif btn_BFS.collidepoint(event.pos) and solving == False:
                     text_box_algorithm = 'Breadth-first search'
                     selected = True
@@ -229,10 +233,16 @@ while running:
                 elif btn_Q_Learning.collidepoint(event.pos) and solving == False:
                     text_box_algorithm = 'Q-Learning'
                     selected = True
+                elif btn_Forward.collidepoint(event.pos) and solving == False:
+                    text_box_algorithm = 'Forward Checking'
+                    selected = True
+                elif btn_AC3.collidepoint(event.pos):
+                    begin = AI.AC3()
                 elif btn_solve.collidepoint(event.pos) and solving == False:
                     if selected == True:
-                        algorithm[f'{text_box_algorithm}'] = True
-                        solving = True
+                        if text_box_algorithm != "AND-OR graph search":
+                            algorithm[f'{text_box_algorithm}'] = True
+                            solving = True
                         if text_box_algorithm == 'Breadth-first search':
                             path = AI.BFS(begin, result)
                         elif text_box_algorithm == 'Uniform Cost Search':
@@ -240,7 +250,7 @@ while running:
                         elif text_box_algorithm == 'Depth-First Search':
                             path = AI.DFS(begin, result)
                         elif text_box_algorithm == 'Iterative Deepening DFS':
-                            path = AI.Iterative_Deepening_DFS(begin, result, 50)
+                            path = AI.Iterative_Deepening_DFS(begin, result)
                         elif text_box_algorithm == 'Greedy Search':
                             path = AI.Greedy_Search(begin, result)
                         elif text_box_algorithm == 'A* Search':
@@ -260,7 +270,7 @@ while running:
                         elif text_box_algorithm == 'Genetic Algorithm':
                             path = AI.Genetic_Algorithm(begin, result, 50)
                         elif text_box_algorithm == 'AND-OR graph search':
-                            path = AI.And_Or_Search(begin, result)
+                            AI.And_Or_Search(begin, result)
                         elif text_box_algorithm == 'Belief State Search':
                             for i in range(100):
                                 begin = random_puzzle_Belief()
@@ -275,7 +285,7 @@ while running:
                                     print('No solution!')
                             sys.exit()
                         elif text_box_algorithm == 'Backtracking Search Algorithm':
-                            path = AI.Backtracking_Search(begin, result)
+                            path = AI.Backtracking(begin, result)
                         elif text_box_algorithm == 'Belief State Search 1 part':
                             for i in range(100):
                                 one_part = random_puzzle_Belief([[1,2,3],[],[]])
@@ -291,6 +301,8 @@ while running:
                             sys.exit()
                         elif text_box_algorithm == 'Q-Learning':
                             path = AI.q_study(begin, result)
+                        elif text_box_algorithm == 'Forward Checking':
+                            path = AI.Forward_Checking(begin, result)
                 elif btn_next.collidepoint(event.pos) and solving == True:
                     if index < len(path):
                         index += 1
@@ -323,7 +335,8 @@ while running:
                                  'Belief State Search': False,
                                  'Backtracking Search Algorithm': False,
                                  'Belief State Search 1 part': False,
-                                 'Q-Learning': False}
+                                 'Q-Learning': False,
+                                 'A* with Forward Checking': False}
                     
                     selected = False
                     speed = 500
@@ -368,6 +381,7 @@ while running:
         btn_tru = button(25, 50, 50, 50, '-', 'black', 'white')
         btn_cong = button(225, 50, 50, 50, '+', 'black', 'white')
         btn_random_Belief = button(25, 400, 125, 50, 'RanBelief', 'red', 'white') 
+        btn_result = button(1000,100,125,50, 'Result', 'red', 'white')
         
         btn_BFS = button(550, 250, 125, 50, 'BFS', 'green', 'white')
         btn_UCS = button(700, 250, 125, 50, 'UCS', 'green', 'white')
@@ -387,7 +401,8 @@ while running:
         btn_Back = button(1000, 550, 125, 50, 'Back', 'green', 'white')
         btn_Belief1p = button(1000, 650, 125, 50, 'Belief1p', 'green', 'white')
         btn_Q_Learning = button(550, 650, 125, 50, 'Q-Learning', 'green', 'white')
-        # btn_AND_OR = button(850, 250, 125, 50, 'AND-OR', 'green', 'white')
+        btn_Forward = button(700, 650, 125, 50, 'Forward', 'green', 'white')
+        btn_AC3 = button(850,650,125,50, 'AC-3', 'green', 'white')
         
         box_status = draw_box_with_text(400, 20, 400, 50, 'STATUS', 'black', 'white')
         box_thuattoan = draw_box_with_text(400, 100, 400, 50, text_box_algorithm, 'black', 'white')
@@ -411,10 +426,11 @@ while running:
                     box_thuattoan = draw_box_with_text(400, 100, 400, 50, f'{text_box_algorithm}', 'black', 'white')
                     solving = False
         elif solving == True and done == True:
-            box_status = draw_box_with_text(400, 20, 400, 50, 'DONE!', 'black', 'white')
-            box_thuattoan = draw_box_with_text(400, 100, 400, 50, f'{text_box_algorithm}', 'black', 'white')
-            current = path[index-1]
-            draw_puzzle(current, (175, 250))
+            if algorithm["AND-OR graph search"] == False:
+                box_status = draw_box_with_text(400, 20, 400, 50, 'DONE!', 'black', 'white')
+                box_thuattoan = draw_box_with_text(400, 100, 400, 50, f'{text_box_algorithm}', 'black', 'white')
+                current = path[index-1]
+                draw_puzzle(current, (175, 250))
         else:
             draw_puzzle(begin, (175, 250))
         draw_box_with_text(500, 250, 5, 500, '', 'black', 'white')
