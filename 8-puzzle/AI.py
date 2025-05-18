@@ -66,7 +66,7 @@ def Uniform_Cost_Search(start, goal):
                     new_state = Chinh_Sua_Ma_Tran(current, X, Y, new_x, new_y)
                     tuple_state = tuple(tuple(row) for row in new_state)
                     if tuple_state not in visited:
-                        open.put(cost + 1, new_state, path + [new_state])
+                        open.put((cost+1, new_state, path + [new_state]))
     return None
 def DFS(start, goal):
     visited = set()
@@ -581,9 +581,6 @@ def q_study(start, goal,epsilon=0.1, episodes=1):
                 reward = -1 if new_state != goal else 100
                 q_table[(x,y)][action] += reward + max(q_table[(new_x,new_y)])
                 current_state = new_state
-                print(q_table)
-
-
     return path
 def Rangbuoc(state):
     #Ràng buộc chuyển động:

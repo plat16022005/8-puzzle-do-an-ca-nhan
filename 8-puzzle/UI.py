@@ -126,7 +126,7 @@ def random_puzzle_Belief():
     random.shuffle(puzzle)
     puzzle = [puzzle[i:i + 3] for i in range(0, 9, 3)]
     return puzzle
-def random_puzzle_Belief(one_part):
+def random_puzzle_Belief_1p(one_part):
     remaining_numbers = [i for i in range(9) if i not in one_part[0]]
     random.shuffle(remaining_numbers)
     one_part[1] = remaining_numbers[:3]
@@ -272,10 +272,10 @@ while running:
                         elif text_box_algorithm == 'AND-OR graph search':
                             AI.And_Or_Search(begin, result)
                         elif text_box_algorithm == 'Belief State Search':
-                            for i in range(100):
+                            for i in range(10):
                                 begin = random_puzzle_Belief()
                                 print(begin)
-                                path = AI.DFS(begin, result)
+                                path = AI.BFS(begin, result)
                                 if path != None:
                                     print('Founded solution!')
                                     for i in path:
@@ -288,9 +288,9 @@ while running:
                             path = AI.Backtracking(begin, result)
                         elif text_box_algorithm == 'Belief State Search 1 part':
                             for i in range(100):
-                                one_part = random_puzzle_Belief([[1,2,3],[],[]])
+                                one_part = random_puzzle_Belief_1p([[1,2,3],[],[]])
                                 print(one_part)
-                                path = AI.DFS(one_part, result)
+                                path = AI.BFS(one_part, result)
                                 if path != None:
                                     print('Founded solution!')
                                     for i in path:
